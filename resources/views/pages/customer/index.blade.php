@@ -20,7 +20,7 @@
                         <th>No</th>
                         <th>Nama Konsumen</th>
                         <th>No. Telp</th>
-                        <th>Email</th>
+                        <th>Poin Loyalitas</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -30,7 +30,10 @@
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $customer->name }}</td>
                         <td>{{ $customer->phone }}</td>
-                        <td>{{ $customer->email ?? '-' }}</td>
+                        
+                        {{-- PERBAIKAN: Menggunakan kolom loyalty_points --}}
+                        <td>{{ $customer->loyalty_points ?? '0' }}</td>
+                        
                         <td>
                             @canany(['customer.update', 'customer.delete'])
                             @can('customer.update')

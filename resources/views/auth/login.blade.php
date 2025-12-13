@@ -3,7 +3,7 @@
     <div class="page page-center">
         <div class="container container-tight py-4">
             <div class="text-center mb-4">
-                <p class="navbar-brand fs-1">Laravel POS</p>
+                <p class="navbar-brand fs-1">KEDAI MATARI</p>
             </div>
             <form method="POST" action="{{ route('login') }}" class="card card-md">
                 @csrf

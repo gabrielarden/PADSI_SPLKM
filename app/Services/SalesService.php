@@ -45,6 +45,8 @@ final readonly class SalesService implements SalesServiceInterface
         return $this->salesRepository->getSaleByTransactionId($transactionId);
     }
 
+    
+
     public function addToCart(int $productId, int $quantity): array
     {
         $product = $this->productRepository->findById($productId);
@@ -285,4 +287,40 @@ final readonly class SalesService implements SalesServiceInterface
             }),
         ];
     }
+
+     public function getBestSellingProducts($startDate, $endDate, $limit = 5)
+    {
+        return SalesItem::whereBetween('created_at', [$startDate, $endDate])
+            ->select('product_name', DB::raw('SUM(quantity) as total_sold'))
+            ->groupBy('product_name')
+            ->orderByDesc('total_sold')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function getRecentSales($limit = 5)
+    {
+        return Sale::with(['customer', 'user'])
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * UPDATE: Menambahkan parameter tanggal
+     */
+    public function getTopCategories($startDate, $endDate, $limit = 5)
+    {
+        return DB::table('sales_items')
+            ->join('products', 'sales_items.product_id', '=', 'products.id')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->whereBetween('sales_items.created_at', [$startDate, $endDate]) // Filter Tanggal
+            ->select('categories.name as category_name', DB::raw('SUM(sales_items.quantity) as total_sold'))
+            ->groupBy('categories.name')
+            ->orderByDesc('total_sold')
+            ->limit($limit)
+            ->get();
+    }
+
+    
 }

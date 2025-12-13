@@ -1,135 +1,102 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreProductRequest;
-use App\Services\ProductService;
+use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
-final class ProductController extends Controller
+class ProductController extends Controller
 {
-    protected ProductService $productService;
-
-    public function __construct(ProductService $productService)
-    {
-        $this->productService = $productService;
-    }
-
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $products = $this->productService->getAllProductsWithRelations();
-        $categories = $this->productService->getAllCategories();
+        // Ambil semua produk dengan relasi kategori
+        $products = Product::with('category')->get();
+        
+        // PERBAIKAN: Ambil data kategori untuk filter di halaman index
+        $categories = Category::all();
+
+        // Kirim variabel $products DAN $categories ke view
         return view('pages.product.index', compact('products', 'categories'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        $categories = $this->productService->getAllCategories();
-        $units = $this->productService->getAllUnits();
-        return view('pages.product.create', compact('categories', 'units'));
+        $categories = Category::all();
+        // Tidak mengirim variabel $units karena sudah tidak dipakai
+        return view('pages.product.create', compact('categories'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreProductRequest $request)
+    public function store(Request $request)
     {
-        DB::beginTransaction();
-        try {
-            $data = $request->validated();
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|unique:products,code',
+            'category_id' => 'required|exists:categories,id',
+            // unit_id dihapus dari validasi
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'minimum_stock' => 'required|integer|min:0',
+            'description' => 'nullable|string',
+            'status' => 'required|in:0,1',
+            // image dihapus dari validasi
+        ]);
 
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                $data['image'] = $request->file('image')->store('products', 'public');
-            }
+        Product::create([
+            'name' => $request->name,
+            'code' => $request->code,
+            'category_id' => $request->category_id,
+            // unit_id tidak diisi (akan otomatis NULL di database jika sudah dimigrasi nullable)
+            'price' => $request->price,
+            'stock' => $request->stock,
+            'minimum_stock' => $request->minimum_stock ?? 1, 
+            'description' => $request->description,
+            'status' => $request->status,
+            // image dihapus
+        ]);
 
-            $this->productService->createProduct($data);
-
-            DB::commit();
-            return redirect()->route('product.index')->withSuccess('Data produk berhasil dibuat');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return redirect()->back()->withErrors("Gagal menambahkan produk: " . $th->getMessage())->withInput();
-        }
+        return redirect()->route('product.index')->with('success', 'Produk berhasil ditambahkan!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show($id)
     {
-        $product = $this->productService->getProductById((int)$id);
+        $product = Product::with('category')->findOrFail($id);
         return view('pages.product.show', compact('product'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit($id)
     {
-        $product = $this->productService->getProductById((int)$id);
-        $categories = $this->productService->getAllCategories();
-        $units = $this->productService->getAllUnits();
-        return view('pages.product.edit', compact('product', 'categories', 'units'));
+        $product = Product::findOrFail($id);
+        $categories = Category::all();
+        return view('pages.product.edit', compact('product', 'categories'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(StoreProductRequest $request, string $id)
+    public function update(Request $request, $id)
     {
-        DB::beginTransaction();
-        try {
-            $data = $request->validated();
-            $product = $this->productService->getProductById((int)$id);
+        $product = Product::findOrFail($id);
 
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                // Delete old image if exists
-                if ($product->image && Storage::disk('public')->exists($product->image)) {
-                    Storage::disk('public')->delete($product->image);
-                }
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|unique:products,code,' . $id,
+            'category_id' => 'required|exists:categories,id',
+            // unit_id dihapus
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'minimum_stock' => 'required|integer|min:0',
+            'description' => 'nullable|string',
+            'status' => 'required|in:0,1',
+        ]);
 
-                $data['image'] = $request->file('image')->store('products', 'public');
-            }
+        // Update semua data kecuali image (karena sudah tidak ada)
+        $product->update($request->all());
 
-            $this->productService->updateProduct((int)$id, $data);
-
-            DB::commit();
-            return redirect()->route('product.index')->withSuccess('Data produk berhasil diperbaharui');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return redirect()->back()->withErrors("Gagal memperbaharui produk: " . $th->getMessage())->withInput();
-        }
+        return redirect()->route('product.index')->with('success', 'Produk berhasil diperbarui!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): \Illuminate\Http\RedirectResponse
+    public function destroy($id)
     {
-        try {
-            $product = $this->productService->getProductById((int)$id);
-
-            // Delete image if exists
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
-            }
-
-            $this->productService->deleteProduct((int)$id);
-            return redirect()->route('product.index')->withSuccess('Data produk berhasil dihapus');
-        } catch (\Throwable $th) {
-            return redirect()->back()->withErrors("Gagal menghapus produk: " . $th->getMessage());
-        }
+        $product = Product::findOrFail($id);
+        $product->delete();
+        return redirect()->route('product.index')->with('success', 'Produk berhasil dihapus!');
     }
 }

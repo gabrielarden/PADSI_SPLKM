@@ -7,7 +7,7 @@
     <div class="card-header">
         <h3 class="card-title">Tambah Produk Baru</h3>
     </div>
-    <form method="POST" action="{{ route('product.store') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('product.store') }}">
         @csrf
         <div class="card-body">
             <div class="row">
@@ -41,8 +41,7 @@
                             name="category_id" required>
                             <option value="">Pilih Kategori</option>
                             @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id')==$category->id ? 'selected' : ''
-                                }}>
+                            <option value="{{ $category->id }}" {{ old('category_id')==$category->id ? 'selected' : '' }}>
                                 {{ $category->name }}
                             </option>
                             @endforeach
@@ -52,9 +51,7 @@
                         @enderror
                     </div>
                 </div>
-            </div>
-
-            <div class="row">
+                
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="price" class="form-label">Harga</label>
@@ -68,8 +65,9 @@
                         </div>
                     </div>
                 </div>
-                
+            </div>
 
+            <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="stock" class="form-label">Stok</label>
@@ -104,12 +102,10 @@
             </div>
 
             <div class="row">
-                
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="status" class="form-label">Status</label>
-                        <select class="form-select @error('status') is-invalid @enderror" id="status" name="status"
-                            required>
+                        <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
                             <option value="1" {{ old('status', '1' )=='1' ? 'selected' : '' }}>Aktif</option>
                             <option value="0" {{ old('status')=='0' ? 'selected' : '' }}>Tidak Aktif</option>
                         </select>
@@ -119,6 +115,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
         <div class="card-footer">
             <div class="d-flex justify-content-end">
@@ -129,29 +126,3 @@
     </form>
 </div>
 @endsection
-
-@push('addon-script')
-<script>
-    // Preview image before upload
-        document.getElementById('image').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    // Create or update image preview
-                    let preview = document.getElementById('imagePreview');
-                    if (!preview) {
-                        preview = document.createElement('img');
-                        preview.id = 'imagePreview';
-                        preview.className = 'mt-2 rounded';
-                        preview.style.maxWidth = '200px';
-                        preview.style.maxHeight = '200px';
-                        document.getElementById('image').parentNode.appendChild(preview);
-                    }
-                    preview.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-</script>
-@endpush

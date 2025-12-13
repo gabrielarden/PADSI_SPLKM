@@ -34,21 +34,11 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="email-{{ $customer->id }}" class="form-label">Email</label>
-                        <input type="email" class="form-control @error('email') is-invalid @enderror"
-                            id="email-{{ $customer->id }}" name="email" value="{{ old('email', $customer->email) }}">
-                        @error('email')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                        @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label for="address-{{ $customer->id }}" class="form-label">Alamat</label>
-                        <textarea class="form-control @error('address') is-invalid @enderror"
-                            id="address-{{ $customer->id }}" name="address"
-                            rows="3">{{ old('address', $customer->address) }}</textarea>
-                        @error('address')
+                        <label for="loyalty_points" class="form-label">Poin Loyalitas</label>
+                        <input type="number" min="0" class="form-control @error('loyalty_points') is-invalid @enderror" id="loyalty_points"
+                            name="loyalty_points" value="{{ old('loyalty_points', 0) }}">
+                        <div class="form-text">Masukkan angka 0 jika pelanggan baru belum memiliki poin.</div>
+                        @error('loyalty_points')
                         <div class="invalid-feedback">
                             {{ $message }}
                         </div>

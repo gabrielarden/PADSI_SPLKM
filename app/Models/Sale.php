@@ -13,6 +13,9 @@ final class Sale extends Model
 {
     use HasFactory;
 
+    // Pastikan terhubung ke tabel 'sales'
+    protected $table = 'sales';
+
     protected $fillable = [
         'transaction_id',
         'customer_id',
@@ -26,6 +29,7 @@ final class Sale extends Model
         'payment_method',
         'status',
         'notes',
+        'created_at', // PENTING: Agar tanggal historis dari CSV bisa masuk
     ];
 
     protected $casts = [
@@ -40,7 +44,7 @@ final class Sale extends Model
     ];
 
     /**
-     * Generate unique transaction ID
+     * Generate unique transaction ID otomatis jika kosong
      */
     protected static function boot(): void
     {
@@ -53,41 +57,32 @@ final class Sale extends Model
         });
     }
 
-    /**
-     * Get the customer for this sale
-     */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
-    /**
-     * Get the user who processed this sale
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     /**
-     * Get the items for this sale
+     * RELASI PENTING:
+     * Fungsi ini WAJIB ADA agar error 'RelationNotFoundException' hilang.
      */
     public function salesItems(): HasMany
     {
+        // Pastikan Anda memiliki model SalesItem di project Anda.
+        // Jika belum ada, buat dengan: php artisan make:model SalesItem
         return $this->hasMany(SalesItem::class);
     }
 
-    /**
-     * Get formatted transaction ID for display
-     */
     public function getFormattedTransactionIdAttribute(): string
     {
         return $this->transaction_id;
     }
 
-    /**
-     * Get formatted payment method for display
-     */
     public function getFormattedPaymentMethodAttribute(): string
     {
         return match ($this->payment_method) {
@@ -99,9 +94,6 @@ final class Sale extends Model
         };
     }
 
-    /**
-     * Get formatted status for display
-     */
     public function getFormattedStatusAttribute(): string
     {
         return match ($this->status) {

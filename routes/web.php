@@ -20,7 +20,17 @@ Route::get('/', function () {
     return auth()->check() ? redirect()->route('dashboard') : view('auth.login');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
+    
+    // Import Penjualan (Laporan Bulanan)
+    Route::post('/dashboard/import', [DashboardController::class, 'importCsv'])->name('dashboard.import');
+    
+    // BARU: Import Pelanggan
+    Route::post('/dashboard/import-customers', [DashboardController::class, 'importCustomers'])->name('dashboard.import-customers');
+});
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

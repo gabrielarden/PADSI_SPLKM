@@ -29,16 +29,20 @@
                         </div>
                         @enderror
                     </div>
+                    
+                    {{-- PERBAIKAN: Input Poin Loyalitas (Ganti Email) --}}
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
-                            name="email" value="{{ old('email') }}">
-                        @error('email')
+                        <label for="loyalty_points" class="form-label">Poin Loyalitas</label>
+                        <input type="number" min="0" class="form-control @error('loyalty_points') is-invalid @enderror" id="loyalty_points"
+                            name="loyalty_points" value="{{ old('loyalty_points', 0) }}">
+                        <div class="form-text">Masukkan angka 0 jika pelanggan baru belum memiliki poin.</div>
+                        @error('loyalty_points')
                         <div class="invalid-feedback">
                             {{ $message }}
                         </div>
                         @enderror
                     </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>

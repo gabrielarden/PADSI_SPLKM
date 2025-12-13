@@ -8,24 +8,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->string('transaction_id')->unique();
+            $table->string('transaction_id')->unique(); // No. Struk
+            // Pastikan tabel 'customers' dan 'users' sudah ada sebelum migrasi ini jalan
             $table->foreignId('customer_id')->nullable()->constrained('customers')->onDelete('set null');
             $table->foreignId('user_id')->constrained('users')->onDelete('restrict');
+            
             $table->decimal('subtotal', 15, 2)->default(0);
             $table->decimal('tax_amount', 15, 2)->default(0);
             $table->decimal('discount_amount', 15, 2)->default(0);
             $table->decimal('total_amount', 15, 2);
-            $table->decimal('paid_amount', 15, 2);
+            
+            // Kolom Wajib Baru
+            $table->decimal('paid_amount', 15, 2); // Kita akan isi sama dengan total_amount saat import
             $table->decimal('change_amount', 15, 2)->default(0);
+            
+            // Enum Mapping
             $table->enum('payment_method', ['cash', 'card', 'transfer', 'qris'])->default('cash');
             $table->enum('status', ['pending', 'completed', 'cancelled'])->default('completed');
+            
             $table->text('notes')->nullable();
             $table->timestamps();
 
@@ -35,9 +39,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('sales');
